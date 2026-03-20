@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="2d18f72c-946d-452e-9914-4c0203305dbc" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vessel-routing.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/common.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/geojson.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/routing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/auth_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/routing_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/jwt_auth.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/logging.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/deployment.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/hpa.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/ingress.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/namespace.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/secret.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/k8s/service.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_auth_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_routes.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 1
+}]]></component>
+  <component name="ProjectId" id="3BDHPRIq4mh9GKsR1Y6MSSAdfsD" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-598b0484d0b5-e2d783800521-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.26927.74" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2d18f72c-946d-452e-9914-4c0203305dbc" name="Changes" comment="" />
+      <created>1774016695896</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1774016695896</updated>
+    </task>
+    <servers />
+  </component>
+</project>
