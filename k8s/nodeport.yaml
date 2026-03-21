@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: vessel-routing-client-external
-  namespace: vessel-routing
+  namespace: vesops
 spec:
   type: NodePort
   selector:

@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     oauth_client_secret: str
 
     # Server
-    port: int = 8000
+    port: int = 8300
 
     # Outbound endpoints
     token_url: str = "https://identity.genix.abilityplatform.abb/public/api/oauth2/token"

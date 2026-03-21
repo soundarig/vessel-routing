@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vessel-routing-client
-  namespace: vessel-routing
+  namespace: vesops
   labels:
     app: vessel-routing-client
 spec:
@@ -30,7 +30,7 @@ spec:
           image: vessel-routing-client:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 8300
           env:
             - name: OAUTH_CLIENT_ID
               valueFrom:
@@ -43,18 +43,18 @@ spec:
                   name: vessel-routing-secrets
                   key: OAUTH_CLIENT_SECRET
             - name: PORT
-              value: "8000"
+              value: "8300"
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 8300
             initialDelaySeconds: 10
             periodSeconds: 15
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 8300
             initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 2

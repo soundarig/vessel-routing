@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: vessel-routing-client
-  namespace: vessel-routing
+  namespace: vesops
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:

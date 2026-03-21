@@ -22,8 +22,8 @@ COPY main.py .
 # Drop to non-root
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8300
 
 # Graceful shutdown: uvicorn handles SIGTERM and drains in-flight requests
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", \
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8300", \
      "--workers", "1", "--timeout-graceful-shutdown", "30"]

@@ -6,7 +6,7 @@ import json
 import urllib.request
 import urllib.parse
 
-BASE = "http://localhost:8000"
+BASE = "http://localhost:8300"
 
 # Step 1 — get token
 print("=== Step 1: Get token ===")
