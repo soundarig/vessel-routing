@@ -6,15 +6,15 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
-from app.models import ErrorResponse, HealthResponse, RoutingRequest
+from app.models import HealthResponse
 from app.services import AuthClient, AuthError, RoutingClient, RoutingConnectionError, RoutingError
-from app.utils.jwt_auth import init_jwks, make_jwt_dependency
+from app.utils.jwt_auth import create_access_token, make_jwt_dependency, verify_credentials
 from app.utils.logging import setup_logging
 
 setup_logging()
@@ -32,14 +32,11 @@ except ValidationError as exc:
 
 _auth_client = AuthClient(settings)
 _routing_client = RoutingClient(_auth_client, settings)
-
-# Build the JWT dependency once — it's a no-op if JWT_JWKS_URI is not set
 _verify_jwt = make_jwt_dependency(settings)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_jwks(settings)   # pre-load JWKS keys at startup
     logger.info("vessel-routing-client starting on port %s", settings.port)
     yield
     logger.info("vessel-routing-client shutting down")
@@ -64,6 +61,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # ---------------------------------------------------------------------------
+# Auth models
+# ---------------------------------------------------------------------------
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int  # seconds
+
+
+# ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
@@ -72,17 +78,40 @@ async def get_health() -> HealthResponse:
     return HealthResponse()
 
 
+@app.post("/auth/token", response_model=TokenResponse, tags=["auth"])
+async def login(
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+) -> TokenResponse:
+    """
+    Exchange username + password for a Bearer JWT.
+
+    Send as application/x-www-form-urlencoded:
+        username=<user>&password=<pass>
+    """
+    if not verify_credentials(username, password, settings):
+        logger.warning("Failed login attempt for user '%s'", username)
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    token = create_access_token(username, settings)
+    logger.info("Token issued for user '%s'", username)
+    return TokenResponse(
+        access_token=token,
+        expires_in=settings.jwt_expire_minutes * 60,
+    )
+
+
 @app.post("/route", status_code=200, tags=["routing"])
 async def post_route(
     request: Request,
-    body: RoutingRequest,
-    _claims: Annotated[dict | None, Depends(_verify_jwt)],
+    _claims: Annotated[dict, Depends(_verify_jwt)],
 ) -> JSONResponse:
     """
     Compute a vessel route.
 
-    Requires a valid Bearer JWT in the Authorization header when
-    JWT_JWKS_URI is configured.
+    Accepts the raw ABB vessel routing JSON payload and forwards it directly
+    to the WebSocket API. Requires a valid Bearer JWT in the Authorization header.
+    Obtain one via POST /auth/token.
     """
     correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
     logger.info(json.dumps({
@@ -92,9 +121,14 @@ async def post_route(
         "correlation_id": correlation_id,
     }))
 
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(status_code=422, content={"detail": "Invalid JSON body"})
+
     start = time.monotonic()
     try:
-        result = await _routing_client.compute_route(body.model_dump())
+        result = await _routing_client.compute_route(body)
         duration_ms = round((time.monotonic() - start) * 1000, 2)
         logger.info(json.dumps({
             "event": "response",

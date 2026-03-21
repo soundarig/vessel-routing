@@ -1,0 +1,47 @@
+{
+  "points": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [-95.2641144, 29.7262421]},
+        "properties": {"name": "Houston, TX", "port": "USHOU-2380"}
+      },
+      {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [4.0710449, 51.9672394]},
+        "properties": {"name": "Rotterdam", "port": "NLRTM-2745"}
+      }
+    ]
+  },
+  "voyage": {
+    "departurePort": "USHOU-2380",
+    "destinationPort": "NLRTM-2745",
+    "etd": "2025-09-20T19:20:30Z"
+  },
+  "vesselParameters": {
+    "name": "MV Test",
+    "imo": "8814275",
+    "vesselType": "DryBulkCarrier",
+    "cargoType": "Packaged",
+    "lengthOverall": 100,
+    "beam": 20,
+    "draft": 10,
+    "fuelConsumptionCurve": [{"speed": 8, "fuelUsage": 2.6}, {"speed": 12, "fuelUsage": 9.2}],
+    "safetyMargins": {"underKeel": 1.0},
+    "ciiRating": "B"
+  },
+  "costs": {
+    "vesselOperatingCost": 25000,
+    "fuelCosts": {"VLSFO": 800}
+  },
+  "weatherSource": "Forecast",
+  "config": {"avoidPiracyZones": true, "useGreatCircle": false},
+  "speed": 10,
+  "optimizationType": "fuel",
+  "restrictions": {
+    "exclusionZones": [],
+    "conditionalAreas": [],
+    "weatherLimits": {}
+  }
+}

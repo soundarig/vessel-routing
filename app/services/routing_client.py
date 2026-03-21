@@ -28,7 +28,7 @@ class RoutingClient:
         self._auth_client = auth_client
         self._settings = settings
 
-    async def compute_route(self, payload: dict) -> list[dict]:
+    async def compute_route(self, payload: dict) -> dict:
         """
         Obtain a token, open the WebSocket, send the payload, collect all
         messages until the server closes the connection, and return them.
@@ -48,11 +48,12 @@ class RoutingClient:
                 return await self._connect_and_collect(token, payload)
             raise RoutingConnectionError(str(exc)) from exc
 
-    async def _connect_and_collect(self, token: str, payload: dict) -> list[dict]:
+    async def _connect_and_collect(self, token: str, payload: dict) -> dict:
         try:
+            # websockets v12 legacy client uses extra_headers (not additional_headers)
             async with websockets.connect(
                 self._settings.routing_ws_url,
-                additional_headers={"Authorization": f"Bearer {token}"},
+                extra_headers={"Authorization": f"Bearer {token}"},
                 open_timeout=self._settings.ws_connect_timeout,
             ) as ws:
                 await ws.send(json.dumps(payload))
@@ -66,24 +67,24 @@ class RoutingClient:
         except OSError as exc:
             raise RoutingConnectionError(str(exc)) from exc
 
-    async def _collect(self, ws) -> list[dict]:
-        messages: list[dict] = []
+    async def _collect(self, ws) -> dict:
+        """Receive the first message from the server and return it immediately."""
         try:
-            while True:
-                raw = await asyncio.wait_for(
-                    ws.recv(),
-                    timeout=self._settings.ws_recv_timeout,
-                )
-                msg = json.loads(raw)
-                messages.append(msg)
-                if isinstance(msg, dict) and msg.get("type") == "error":
-                    raise RoutingError(msg.get("message", str(msg)))
+            raw = await asyncio.wait_for(
+                ws.recv(),
+                timeout=self._settings.ws_recv_timeout,
+            )
         except asyncio.TimeoutError as exc:
             raise RoutingConnectionError(
-                f"No message received within {self._settings.ws_recv_timeout}s"
+                f"No response received within {self._settings.ws_recv_timeout}s"
             ) from exc
-        except websockets.exceptions.ConnectionClosed:
-            pass  # normal — server closed after sending all data
+        except websockets.exceptions.ConnectionClosed as exc:
+            raise RoutingConnectionError(f"Connection closed before response: {exc}") from exc
 
-        logger.info("Collected %d messages from routing API", len(messages))
-        return messages
+        msg = json.loads(raw)
+        logger.info("Received response from routing API")
+
+        if isinstance(msg, dict) and msg.get("type") == "error":
+            raise RoutingError(msg.get("message", str(msg)))
+
+        return msg
