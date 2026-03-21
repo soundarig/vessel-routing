@@ -42,6 +42,21 @@ spec:
                 secretKeyRef:
                   name: vessel-routing-secrets
                   key: OAUTH_CLIENT_SECRET
+            - name: API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: vessel-routing-secrets
+                  key: API_USERNAME
+            - name: API_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: vessel-routing-secrets
+                  key: API_PASSWORD_HASH
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vessel-routing-secrets
+                  key: JWT_SECRET_KEY
             - name: PORT
               value: "8300"
           livenessProbe:
