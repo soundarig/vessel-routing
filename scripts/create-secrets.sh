@@ -133,7 +133,7 @@ log_warn "DO NOT commit this file — it contains real credentials!"
 
 # Ensure .gitignore covers the secret file
 GITIGNORE="${PROJECT_DIR}/.gitignore"
-GITIGNORE_ENTRY="k8s/dev/secret.yaml"
+GITIGNORE_ENTRY="k8s/dev/secrets.yaml"
 if [ ! -f "${GITIGNORE}" ]; then
     echo "${GITIGNORE_ENTRY}" > "${GITIGNORE}"
     log_info "Created .gitignore with secret.yaml entry"
