@@ -36,14 +36,12 @@ echo "============================================"
 # ---------------------------------------------------------------------------
 echo ""
 echo "[1/5] Ensuring local registry is running on k3s server..."
-ssh "root@${K3S_SERVER_IP}" bash <<'REMOTE'
-if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^registry$'; then
+if docker ps --format '{{.Ports}}' 2>/dev/null | grep -q '0.0.0.0:5000'; then
+  echo "Registry already running on port 5000."
+else
   echo "Starting local Docker registry on port 5000..."
   docker run -d --name registry --restart=always -p 5000:5000 registry:2
-else
-  echo "Registry already running."
 fi
-REMOTE
 
 # ---------------------------------------------------------------------------
 # Step 2 — Build Docker image locally
@@ -57,19 +55,13 @@ docker build -t "${FULL_IMAGE}" "${PROJECT_DIR}"
 # ---------------------------------------------------------------------------
 echo ""
 echo "[3/5] Pushing image to ${REGISTRY}..."
-# Allow insecure registry for local k3s
-if ! grep -q "${K3S_SERVER_IP}:5000" /etc/docker/daemon.json 2>/dev/null; then
-  echo "NOTE: If push fails, add to /etc/docker/daemon.json on this machine:"
-  echo '  {"insecure-registries": ["'"${K3S_SERVER_IP}:5000"'"]}'
-fi
 docker push "${FULL_IMAGE}"
 
 # ---------------------------------------------------------------------------
 # Step 4 — Configure k3s to trust the local registry (idempotent)
 # ---------------------------------------------------------------------------
 echo ""
-echo "[4/5] Configuring k3s registry mirror on server..."
-ssh "root@${K3S_SERVER_IP}" bash <<REMOTE
+echo "[4/5] Configuring k3s registry mirror..."
 mkdir -p /etc/rancher/k3s
 cat > /etc/rancher/k3s/registries.yaml <<EOF
 mirrors:
@@ -78,7 +70,6 @@ mirrors:
       - "http://${K3S_SERVER_IP}:5000"
 EOF
 echo "Registry config written."
-REMOTE
 
 # ---------------------------------------------------------------------------
 # Step 5 — Apply k8s manifests
