@@ -11,7 +11,7 @@ NAMESPACE="vesops"
 SECRET_NAME="vessel-routing-secrets"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-SECRET_FILE="${PROJECT_DIR}/k8s/dev/secret.yaml"
+SECRET_FILE="${PROJECT_DIR}/k8s/dev/secrets.yaml"
 
 # Colors
 GREEN='\033[0;32m'
@@ -128,16 +128,19 @@ data:
   JWT_SECRET_KEY: ${B64_JWT_SECRET_KEY}
 EOF
 
-log_info "secret.yaml updated."
+log_info "secret.yaml updated at ${SECRET_FILE}"
+log_warn "DO NOT commit this file — it contains real credentials!"
 
-# ---------------------------------------------------------------------------
-# Apply to Kubernetes
-# ---------------------------------------------------------------------------
-log_info "Applying secret to namespace '${NAMESPACE}'..."
-kubectl apply -f "${SECRET_FILE}"
-log_info "Secret applied successfully."
+# Ensure .gitignore covers the secret file
+GITIGNORE="${PROJECT_DIR}/.gitignore"
+GITIGNORE_ENTRY="k8s/dev/secret.yaml"
+if [ ! -f "${GITIGNORE}" ]; then
+    echo "${GITIGNORE_ENTRY}" > "${GITIGNORE}"
+    log_info "Created .gitignore with secret.yaml entry"
+elif ! grep -q "${GITIGNORE_ENTRY}" "${GITIGNORE}"; then
+    echo "${GITIGNORE_ENTRY}" >> "${GITIGNORE}"
+    log_info "Added ${GITIGNORE_ENTRY} to .gitignore"
+fi
 
 echo ""
-log_info "To verify:"
-echo "  kubectl get secret ${SECRET_NAME} -n ${NAMESPACE}"
-echo "  kubectl describe secret ${SECRET_NAME} -n ${NAMESPACE}"
+log_info "Run ./scripts/deploy.sh to apply and deploy."
