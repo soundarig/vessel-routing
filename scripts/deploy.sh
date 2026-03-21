@@ -85,7 +85,7 @@ check_local_registry() {
 # ---------------------------------------------------------------------------
 build_image() {
     log_info "Building Docker image..."
-    docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" "${PROJECT_DIR}"
+    docker build -f "${PROJECT_DIR}/Dockerfile.k8s" -t "${IMAGE_NAME}:${IMAGE_TAG}" "${PROJECT_DIR}"
     log_info "Docker image built successfully"
 }
 
