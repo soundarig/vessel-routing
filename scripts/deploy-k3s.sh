@@ -53,8 +53,42 @@ docker build -t "${FULL_IMAGE}" "${PROJECT_DIR}"
 # ---------------------------------------------------------------------------
 # Step 3 — Push image to k3s server registry
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Step 3 — Configure insecure registry then push
+# ---------------------------------------------------------------------------
 echo ""
-echo "[3/5] Pushing image to ${REGISTRY}..."
+echo "[3/5] Configuring insecure registry and pushing image to ${REGISTRY}..."
+
+# Add insecure registry to Docker daemon config if not already there
+DAEMON_JSON="/etc/docker/daemon.json"
+if ! grep -q "${K3S_SERVER_IP}:5000" "${DAEMON_JSON}" 2>/dev/null; then
+  echo "Adding insecure registry to ${DAEMON_JSON}..."
+  if [ -f "${DAEMON_JSON}" ]; then
+    # File exists — merge insecure-registries entry using python
+    python3 -c "
+import json, sys
+with open('${DAEMON_JSON}') as f:
+    cfg = json.load(f)
+regs = cfg.get('insecure-registries', [])
+if '${K3S_SERVER_IP}:5000' not in regs:
+    regs.append('${K3S_SERVER_IP}:5000')
+cfg['insecure-registries'] = regs
+with open('${DAEMON_JSON}', 'w') as f:
+    json.dump(cfg, f, indent=2)
+print('Updated daemon.json')
+"
+  else
+    echo '{"insecure-registries": ["'"${K3S_SERVER_IP}:5000"'"]}' > "${DAEMON_JSON}"
+    echo "Created daemon.json"
+  fi
+  echo "Restarting Docker daemon..."
+  systemctl restart docker
+  sleep 3
+  echo "Docker restarted."
+else
+  echo "Insecure registry already configured."
+fi
+
 docker push "${FULL_IMAGE}"
 
 # ---------------------------------------------------------------------------
