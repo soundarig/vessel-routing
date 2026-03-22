@@ -37,8 +37,12 @@ class Settings(BaseSettings):
     api_username: str = "REPLACE_ME"
     api_password_hash: str = "REPLACE_ME"   # bcrypt hash of the password
 
-    # SQL Server — ports database
-    db_connection_string: str = ""  # full ODBC connection string, e.g. "Driver={ODBC Driver 18 for SQL Server};Server=...;Database=...;Uid=...;Pwd=..."
+    # SQL Server — ports database (pymssql, no ODBC driver needed)
+    db_host: str = ""          # e.g. "192.168.1.10" or "sqlserver.example.com"
+    db_port: int = 1433
+    db_user: str = ""
+    db_password: str = ""
+    db_name: str = ""          # e.g. "EDNaviGas"
 
     # Secret used to sign issued JWTs — must be a long random string in production
     jwt_secret_key: str = "REPLACE_ME"

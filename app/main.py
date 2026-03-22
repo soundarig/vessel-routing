@@ -35,7 +35,17 @@ except ValidationError as exc:
 _auth_client = AuthClient(settings)
 _routing_client = RoutingClient(_auth_client, settings)
 _verify_jwt = make_jwt_dependency(settings)
-_ports_client = PortsClient(settings.db_connection_string) if settings.db_connection_string else None
+_ports_client = (
+    PortsClient(
+        host=settings.db_host,
+        user=settings.db_user,
+        password=settings.db_password,
+        database=settings.db_name,
+        port=settings.db_port,
+    )
+    if settings.db_host
+    else None
+)
 
 
 @asynccontextmanager

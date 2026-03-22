@@ -1,17 +1,31 @@
 """
 SQL Server client for fetching port data from EDNaviGas.dbo.Ports.
+Uses pymssql — no system ODBC driver required.
 """
 import logging
 from typing import Any
 
-import aioodbc
+import pymssql
 
 logger = logging.getLogger(__name__)
 
 
 class PortsClient:
-    def __init__(self, connection_string: str) -> None:
-        self._conn_str = connection_string
+    def __init__(self, host: str, user: str, password: str, database: str, port: int = 1433) -> None:
+        self._host = host
+        self._user = user
+        self._password = password
+        self._database = database
+        self._port = port
+
+    def _connect(self):
+        return pymssql.connect(
+            server=self._host,
+            user=self._user,
+            password=self._password,
+            database=self._database,
+            port=str(self._port),
+        )
 
     async def get_ports(self, page: int = 1, page_size: int = 50) -> dict[str, Any]:
         """Fetch paginated active ports with lat/lon from the database."""
@@ -30,21 +44,23 @@ class PortsClient:
             FROM [EDNaviGas].[dbo].[Ports]
             WHERE IsActive = 1
             ORDER BY Port
-            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-        """
-        count_query = """
-            SELECT COUNT(*) FROM [EDNaviGas].[dbo].[Ports] WHERE IsActive = 1
-        """
-        try:
-            async with await aioodbc.connect(dsn=self._conn_str) as conn:
-                async with conn.cursor() as cur:
-                    await cur.execute(count_query)
-                    total = (await cur.fetchone())[0]
+            OFFSET %d ROWS FETCH NEXT %d ROWS ONLY
+        """ % (offset, page_size)
 
-                    await cur.execute(query, offset, page_size)
-                    columns = [col[0] for col in cur.description]
-                    rows = await cur.fetchall()
-                    items = [dict(zip(columns, row)) for row in rows]
+        count_query = "SELECT COUNT(*) FROM [EDNaviGas].[dbo].[Ports] WHERE IsActive = 1"
+
+        try:
+            conn = self._connect()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(count_query)
+                    total = cur.fetchone()[0]
+
+                with conn.cursor(as_dict=True) as cur:
+                    cur.execute(query)
+                    items = cur.fetchall()
+            finally:
+                conn.close()
 
             return {
                 "items": items,
