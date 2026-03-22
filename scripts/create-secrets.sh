@@ -68,10 +68,10 @@ echo ""
 # ---------------------------------------------------------------------------
 # SQL Server connection string
 # ---------------------------------------------------------------------------
-log_info "SQL Server connection string (for ports database) Driver={ODBC Driver 18 for SQL Server};Server=myip,1433;Database=mydb;Uid=myuser;Pwd=mypassword;Encrypt=no;TrustServerCertificate=yes
-"
+log_info "SQL Server connection string (for ports database)"
+echo "  Example: Driver={ODBC Driver 18 for SQL Server};Server=myip,1433;Database=EDNaviGas;Uid=myuser;Pwd=mypassword;Encrypt=no;TrustServerCertificate=yes"
 echo ""
-read -p "  DB_CONNECTION_STRING (leave blank to skip) : " DB_CONNECTION_STRING
+read -p "  DB_CONNECTION_STRING : " DB_CONNECTION_STRING
 echo ""
 
 # ---------------------------------------------------------------------------

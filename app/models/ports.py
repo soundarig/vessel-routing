@@ -11,3 +11,11 @@ class PortResponse(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     is_active: bool | None = None
+
+
+class PortsPageResponse(BaseModel):
+    items: list[PortResponse]
+    total: int
+    page: int
+    page_size: int
+    pages: int
