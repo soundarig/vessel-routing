@@ -57,6 +57,11 @@ spec:
                 secretKeyRef:
                   name: vessel-routing-secrets
                   key: JWT_SECRET_KEY
+            - name: DB_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: vessel-routing-secrets
+                  key: DB_CONNECTION_STRING
             - name: PORT
               value: "8300"
           livenessProbe:

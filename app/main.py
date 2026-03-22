@@ -13,7 +13,9 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.models import HealthResponse
+from app.models.ports import PortResponse
 from app.services import AuthClient, AuthError, RoutingClient, RoutingConnectionError, RoutingError
+from app.services.ports_client import PortsClient
 from app.utils.jwt_auth import create_access_token, make_jwt_dependency, verify_credentials
 from app.utils.logging import setup_logging
 
@@ -33,6 +35,7 @@ except ValidationError as exc:
 _auth_client = AuthClient(settings)
 _routing_client = RoutingClient(_auth_client, settings)
 _verify_jwt = make_jwt_dependency(settings)
+_ports_client = PortsClient(settings.db_connection_string) if settings.db_connection_string else None
 
 
 @asynccontextmanager
@@ -167,3 +170,21 @@ async def post_route(
             content={"detail": "Internal server error"},
             headers={"X-Correlation-ID": correlation_id},
         )
+
+
+@app.get("/ports", response_model=list[PortResponse], tags=["ports"])
+async def get_ports(
+    _claims: Annotated[dict, Depends(_verify_jwt)],
+) -> list[PortResponse]:
+    """
+    Fetch all active ports with latitude and longitude from the database.
+    Requires a valid Bearer JWT in the Authorization header.
+    """
+    if _ports_client is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    try:
+        ports = await _ports_client.get_all_ports()
+        return ports
+    except Exception as exc:
+        logger.error("Failed to fetch ports: %s", exc)
+        raise HTTPException(status_code=502, detail="Failed to fetch ports from database")

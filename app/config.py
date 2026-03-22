@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     api_username: str = "REPLACE_ME"
     api_password_hash: str = "REPLACE_ME"   # bcrypt hash of the password
 
+    # SQL Server — ports database
+    db_connection_string: str = ""  # full ODBC connection string, e.g. "Driver={ODBC Driver 18 for SQL Server};Server=...;Database=...;Uid=...;Pwd=..."
+
     # Secret used to sign issued JWTs — must be a long random string in production
     jwt_secret_key: str = "REPLACE_ME"
     jwt_algorithm: str = "HS256"

@@ -66,6 +66,15 @@ log_info "bcrypt hash generated."
 echo ""
 
 # ---------------------------------------------------------------------------
+# SQL Server connection string
+# ---------------------------------------------------------------------------
+log_info "SQL Server connection string (for ports database) Driver={ODBC Driver 18 for SQL Server};Server=myip,1433;Database=mydb;Uid=myuser;Pwd=mypassword;Encrypt=no;TrustServerCertificate=yes
+"
+echo ""
+read -p "  DB_CONNECTION_STRING (leave blank to skip) : " DB_CONNECTION_STRING
+echo ""
+
+# ---------------------------------------------------------------------------
 # JWT secret
 # ---------------------------------------------------------------------------
 log_info "JWT signing secret"
@@ -88,6 +97,7 @@ echo "  OAUTH_CLIENT_SECRET : ****"
 echo "  API_USERNAME        : ${API_USERNAME}"
 echo "  API_PASSWORD_HASH   : (bcrypt)"
 echo "  JWT_SECRET_KEY      : ****"
+echo "  DB_CONNECTION_STRING: $([ -n "${DB_CONNECTION_STRING}" ] && echo "set" || echo "not set")"
 echo "============================================"
 echo ""
 read -p "Write to ${SECRET_FILE} and apply to namespace '${NAMESPACE}'? [y/N] " CONFIRM
@@ -106,6 +116,7 @@ B64_OAUTH_CLIENT_SECRET=$(b64 "${OAUTH_CLIENT_SECRET}")
 B64_API_USERNAME=$(b64 "${API_USERNAME}")
 B64_API_PASSWORD_HASH=$(b64 "${API_PASSWORD_HASH}")
 B64_JWT_SECRET_KEY=$(b64 "${JWT_SECRET_KEY}")
+B64_DB_CONNECTION_STRING=$(b64 "${DB_CONNECTION_STRING}")
 
 # ---------------------------------------------------------------------------
 # Write secrets.yaml with real base64 values
@@ -130,6 +141,7 @@ data:
   API_USERNAME: ${B64_API_USERNAME}
   API_PASSWORD_HASH: ${B64_API_PASSWORD_HASH}
   JWT_SECRET_KEY: ${B64_JWT_SECRET_KEY}
+  DB_CONNECTION_STRING: ${B64_DB_CONNECTION_STRING}
 EOF
 
 log_info "secret.yaml updated at ${SECRET_FILE}"
