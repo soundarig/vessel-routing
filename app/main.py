@@ -13,7 +13,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import Settings
 from app.models import HealthResponse
-from app.models.ports import  PortsPageResponse
+from app.models.ports import PortResponse, PortsPageResponse
 from app.services import AuthClient, AuthError, RoutingClient, RoutingConnectionError, RoutingError
 from app.services.ports_client import PortsClient
 from app.utils.jwt_auth import create_access_token, make_jwt_dependency, verify_credentials
@@ -182,11 +182,38 @@ async def post_route(
         )
 
 
+@app.get("/ports/search", response_model=list[PortResponse], tags=["ports"])
+async def search_ports(
+    _claims: Annotated[dict, Depends(_verify_jwt)],
+    q: str,
+    limit: int = 100,
+) -> list[PortResponse]:
+    """
+    Search active ports by name, port code, or country code.
+    Requires a valid Bearer JWT in the Authorization header.
+
+    - **q**: search string (matched against port name, port code, country code)
+    - **limit**: max results to return (default: 20, max: 100)
+    """
+    if _ports_client is None:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    if not q or not q.strip():
+        raise HTTPException(status_code=400, detail="q must not be empty")
+    if not 1 <= limit <= 100:
+        raise HTTPException(status_code=400, detail="limit must be between 1 and 100")
+    try:
+        results = await _ports_client.search_ports(q.strip(), limit=limit)
+        return results
+    except Exception as exc:
+        logger.error("Failed to search ports: %s", exc)
+        raise HTTPException(status_code=502, detail="Failed to search ports from database")
+
+
 @app.get("/ports", response_model=PortsPageResponse, tags=["ports"])
 async def get_ports(
     _claims: Annotated[dict, Depends(_verify_jwt)],
     page: int = 1,
-    page_size: int = 50,
+    page_size: int = 50
 ) -> PortsPageResponse:
     """
     Fetch paginated active ports with latitude and longitude.

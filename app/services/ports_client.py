@@ -27,7 +27,7 @@ class PortsClient:
             port=str(self._port),
         )
 
-    async def get_ports(self, page: int = 1, page_size: int = 50) -> dict[str, Any]:
+    async def get_ports(self, page: int, page_size: int) -> dict[str, Any]:
         """Fetch paginated active ports with lat/lon from the database."""
         offset = (page - 1) * page_size
         query = """
@@ -71,4 +71,41 @@ class PortsClient:
             }
         except Exception as exc:
             logger.error("Failed to fetch ports from database: %s", exc)
+            raise
+
+    async def search_ports(self, q: str, limit: int = 20) -> list[dict[str, Any]]:
+        """Search active ports by port name, port code, or country code (case-insensitive)."""
+        like_param = f"%{q}%"
+        query = f"""
+            SELECT TOP {limit}
+                int_PortID   AS port_id,
+                PortCode     AS port_code,
+                Port         AS port_name,
+                CountryCode  AS country_code,
+                ZoneCode     AS zone_code,
+                IsEUPort     AS is_eu_port,
+                Latitude     AS latitude,
+                Longitude    AS longitude,
+                IsActive     AS is_active
+            FROM [EDNaviGas].[dbo].[Ports]
+            WHERE IsActive = 1
+              AND (
+                    Port        LIKE %s
+                 OR PortCode    LIKE %s
+                 OR CountryCode LIKE %s
+              )
+            ORDER BY Port
+        """
+
+        try:
+            conn = self._connect()
+            try:
+                with conn.cursor(as_dict=True) as cur:
+                    cur.execute(query, (like_param, like_param, like_param))
+                    items = cur.fetchall()
+            finally:
+                conn.close()
+            return items
+        except Exception as exc:
+            logger.error("Failed to search ports: %s", exc)
             raise
