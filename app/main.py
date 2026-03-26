@@ -53,6 +53,8 @@ async def lifespan(app: FastAPI):
     logger.info("vessel-routing-client starting on port %s", settings.port)
     yield
     logger.info("vessel-routing-client shutting down")
+    if _ports_client is not None:
+        _ports_client.close()
 
 
 # ---------------------------------------------------------------------------
