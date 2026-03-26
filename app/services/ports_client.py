@@ -178,20 +178,21 @@ class PortsClient:
 
     def _search_ports_sync(self, q: str, limit: int) -> list[dict[str, Any]]:
         like_param = f"%{q}%"
+        # Build TOP clause via f-string (limit is a validated int, not user input).
+        # Keep %s placeholders for pymssql parameterisation of the LIKE values.
+        sql = f"""
+            SELECT TOP {limit}
+                {_SELECT_COLUMNS}
+            FROM   {_TABLE}
+            WHERE  PortName LIKE %s
+               OR  PortCode LIKE %s
+            ORDER  BY PortName
+        """
 
         def _execute():
             with self._get_conn() as conn:
                 with conn.cursor(as_dict=True) as cur:
-                    cur.execute(
-                        f"""
-                        SELECT TOP %d {_SELECT_COLUMNS}
-                        FROM   {_TABLE}
-                        WHERE  PortName LIKE %s
-                           OR  PortCode LIKE %s
-                        ORDER  BY PortName
-                        """ % limit,
-                        (like_param, like_param),
-                    )
+                    cur.execute(sql, (like_param, like_param))
                     return cur.fetchall()
 
         return self._run_with_retry(_execute)
