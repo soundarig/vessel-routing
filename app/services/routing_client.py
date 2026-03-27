@@ -34,19 +34,33 @@ class RoutingClient:
         messages until the server closes the connection, and return them.
 
         Automatically retries once with a fresh token on a 401/403 close code.
+        Retries up to 2 times on a 410 session-unavailable response.
         """
         token = await self._auth_client.get_token()
-        try:
-            return await self._connect_and_collect(token, payload)
-        except websockets.exceptions.InvalidStatus as exc:
-            # 401 / 403 → invalidate cached token and retry once
-            if exc.response.status_code in (401, 403):
-                logger.warning("WebSocket auth rejected (%s), refreshing token and retrying",
-                               exc.response.status_code)
-                self._auth_client.invalidate()
-                token = await self._auth_client.get_token()
+        last_exc: Exception | None = None
+
+        for attempt in range(3):
+            try:
                 return await self._connect_and_collect(token, payload)
-            raise RoutingConnectionError(str(exc)) from exc
+            except websockets.exceptions.InvalidStatus as exc:
+                if exc.response.status_code in (401, 403):
+                    logger.warning("WebSocket auth rejected (%s), refreshing token and retrying",
+                                   exc.response.status_code)
+                    self._auth_client.invalidate()
+                    token = await self._auth_client.get_token()
+                    last_exc = exc
+                    continue
+                raise RoutingConnectionError(str(exc)) from exc
+            except RoutingError as exc:
+                # Retry on 410 session-unavailable (transient ABB-side issue)
+                if "410" in str(exc) and attempt < 2:
+                    logger.warning("ABB 410 session error (attempt %d/3), retrying: %s", attempt + 1, exc)
+                    await asyncio.sleep(0.5 * (attempt + 1))
+                    last_exc = exc
+                    continue
+                raise
+
+        raise last_exc
 
     async def _connect_and_collect(self, token: str, payload: dict) -> dict:
         try:
@@ -84,7 +98,22 @@ class RoutingClient:
         msg = json.loads(raw)
         logger.info("Received response from routing API")
 
-        if isinstance(msg, dict) and msg.get("type") == "error":
-            raise RoutingError(msg.get("message", str(msg)))
+        # ABB returns typed error envelopes — surface them as RoutingError
+        if isinstance(msg, dict):
+            # { "type": "error", "message": "..." }
+            if msg.get("type") == "error":
+                raise RoutingError(msg.get("message", str(msg)))
+
+            # { "errors": [{"status": 410, "title": "Connection", ...}], ... }
+            errors = msg.get("errors")
+            if errors and isinstance(errors, list):
+                first = errors[0]
+                status = first.get("status")
+                title = first.get("title", "")
+                detail = first.get("detail", str(first))
+                if status == 410:
+                    # Session expired / no valid connection on ABB side — caller should retry
+                    raise RoutingError(f"ABB routing session unavailable ({status} {title}): {detail}")
+                raise RoutingError(f"ABB routing error ({status} {title}): {detail}")
 
         return msg
